@@ -1,0 +1,23 @@
+{
+  "name": "AutoReserveSFCWellness",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "strt:dev": "nodemon dist/app.js -watch src",
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "repository": "https://github.com/saji-ryu/AutoReserveSFCWellness",
+  "author": "saji-ryu <rsajiki@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^6.0.0",
+    "puppeteer": "^1.8.0",
+    "typescript": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^4.0.3",
+    "@types/puppeteer": "^1.6.4"
+  }
+}
