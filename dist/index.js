@@ -34,7 +34,13 @@ const main = () => __awaiter(this, void 0, void 0, function* () {
             }
         }
         if (!isAlreadyReserved) {
-            loginAndReserve();
+            yield loginAndReserve(collationResult.index);
+            const newReservedClasses = reservedClasses;
+            yield newReservedClasses.push(collationResult.detail);
+            yield writeFileAsync("./src/reserved.json", JSON.stringify(newReservedClasses));
+        }
+        else {
+            console.log("already reserved");
         }
     }
 });
@@ -44,7 +50,12 @@ const getClasses = () => __awaiter(this, void 0, void 0, function* () {
     yield page.goto("https://wellness.sfc.keio.ac.jp/index.php?page=top&limit=9999&semester=20185&lang=ja", {
         waitUntil: "domcontentloaded",
     });
-    const classTable = yield page.$$("#maincontents > div:nth-child(8) > table > tbody > tr");
+    const classInfoArray = yield getClassInfoArray(page, "#maincontents > div:nth-child(8) > table > tbody > tr");
+    yield browser.close();
+    return classInfoArray;
+});
+const getClassInfoArray = (page, selector) => __awaiter(this, void 0, void 0, function* () {
+    const classTable = yield page.$$(selector);
     const classInfoArray = [];
     for (let c of classTable) {
         let classInfoString = yield c.$eval("td.w3-hide-large.w3-hide-medium", elements => {
@@ -53,11 +64,9 @@ const getClasses = () => __awaiter(this, void 0, void 0, function* () {
         let classInfo = yield parseClassInfoString(classInfoString);
         yield classInfoArray.push(classInfo);
     }
-    yield console.log(classInfoArray);
-    yield browser.close();
     return classInfoArray;
 });
-const loginAndReserve = () => __awaiter(this, void 0, void 0, function* () {
+const loginAndReserve = (toReserveIndex) => __awaiter(this, void 0, void 0, function* () {
     const browser = yield puppeteer.launch();
     const page = yield browser.newPage();
     yield page.goto("https://wellness.sfc.keio.ac.jp/index.php?page=top&semester=20185&lang=ja", {
@@ -66,14 +75,19 @@ const loginAndReserve = () => __awaiter(this, void 0, void 0, function* () {
     yield page.type("#maincontents > form > div > table > tbody > tr:nth-child(1) > td > input", process.env.LOGIN_NAME, { delay: 100 });
     yield page.type("#maincontents > form > div > table > tbody > tr:nth-child(2) > td > input", process.env.PASSWORD, { delay: 100 });
     yield page.click(`#maincontents > form > div > table > tbody > tr:nth-child(3) > td:nth-child(2) > input[type="submit"]`);
-    yield page.waitFor(100);
-    yield page.screenshot({ path: "logined.png", fullPage: true });
+    yield page.waitFor(200);
+    yield page.click("#maincontents > ul:nth-child(8) > li > a");
+    yield page.waitFor(300);
+    yield page.click(`#maincontents > div:nth-last-child(1) > table > tbody > tr:nth-child(${toReserveIndex +
+        1}) > td:nth-child(8) > a`);
+    yield page.waitFor(300);
+    yield page.click(`#maincontents > form > p > input[type="submit"]:nth-child(1)`);
+    yield page.waitFor(300);
+    yield page.click(`#maincontents > form > p > input[type="submit"]:nth-child(1)`);
     yield page.waitFor(100);
     yield page.click("#navbar > div > div:nth-child(1) > button");
     yield page.waitFor(100);
     yield page.click(`#dropdown1 > div > form > input[type="submit"]:nth-child(6)`);
-    yield page.waitFor(100);
-    yield page.screenshot({ path: "logouted.png", fullPage: true });
     yield browser.close();
 });
 const parseClassInfoString = (classInfoString) => __awaiter(this, void 0, void 0, function* () {
@@ -96,26 +110,28 @@ const calDOW = (month, day) => {
     const date = new Date(2018, month - 1, day);
     return date.getDay();
 };
-//FIXME:型
 const hasDesiredClass = () => __awaiter(this, void 0, void 0, function* () {
     const desiredClassName = process.env.DESIRED_CLASS_NAME;
     const classes = yield getClasses();
-    for (let c of classes) {
-        if (c.event === desiredClassName) {
+    for (let i = 0; i < classes.length; i++) {
+        if (classes[i].event === desiredClassName) {
             return {
                 result: true,
-                detail: c,
+                index: i,
+                detail: classes[i],
             };
         }
     }
     return {
         result: false,
+        index: null,
         detail: null,
     };
 });
 // getClasses();
 const test = () => __awaiter(this, void 0, void 0, function* () {
     yield main();
+    // await getClasses();
     // await writeFileAsync("./src/reserved.json", JSON.stringify({}));
 });
 test();

@@ -35,7 +35,15 @@ const main = async (): Promise<void> => {
       }
     }
     if (!isAlreadyReserved) {
-      loginAndReserve();
+      await loginAndReserve(collationResult.index);
+      const newReservedClasses = reservedClasses;
+      await newReservedClasses.push(collationResult.detail);
+      await writeFileAsync(
+        "./src/reserved.json",
+        JSON.stringify(newReservedClasses)
+      );
+    } else {
+      console.log("already reserved");
     }
   }
 };
@@ -49,9 +57,19 @@ const getClasses = async (): Promise<ClassInfoArray> => {
       waitUntil: "domcontentloaded",
     }
   );
-  const classTable: Array<puppeteer.ElementHandle> = await page.$$(
+  const classInfoArray: ClassInfoArray = await getClassInfoArray(
+    page,
     "#maincontents > div:nth-child(8) > table > tbody > tr"
   );
+  await browser.close();
+  return classInfoArray;
+};
+
+const getClassInfoArray = async (
+  page: puppeteer.Page,
+  selector: string
+): Promise<ClassInfoArray> => {
+  const classTable: Array<puppeteer.ElementHandle> = await page.$$(selector);
   const classInfoArray: ClassInfoArray = [];
   for (let c of classTable) {
     let classInfoString: string = await c.$eval(
@@ -63,12 +81,10 @@ const getClasses = async (): Promise<ClassInfoArray> => {
     let classInfo = await parseClassInfoString(classInfoString);
     await classInfoArray.push(classInfo);
   }
-  await console.log(classInfoArray);
-  await browser.close();
   return classInfoArray;
 };
 
-const loginAndReserve = async (): Promise<void> => {
+const loginAndReserve = async (toReserveIndex: number): Promise<void> => {
   const browser: puppeteer.Browser = await puppeteer.launch();
   const page: puppeteer.Page = await browser.newPage();
   await page.goto(
@@ -90,16 +106,27 @@ const loginAndReserve = async (): Promise<void> => {
   await page.click(
     `#maincontents > form > div > table > tbody > tr:nth-child(3) > td:nth-child(2) > input[type="submit"]`
   );
-  await page.waitFor(100);
-  await page.screenshot({ path: "logined.png", fullPage: true });
+  await page.waitFor(200);
+  await page.click("#maincontents > ul:nth-child(8) > li > a");
+  await page.waitFor(300);
+  await page.click(
+    `#maincontents > div:nth-last-child(1) > table > tbody > tr:nth-child(${toReserveIndex +
+      1}) > td:nth-child(8) > a`
+  );
+  await page.waitFor(300);
+  await page.click(
+    `#maincontents > form > p > input[type="submit"]:nth-child(1)`
+  );
+  await page.waitFor(300);
+  await page.click(
+    `#maincontents > form > p > input[type="submit"]:nth-child(1)`
+  );
   await page.waitFor(100);
   await page.click("#navbar > div > div:nth-child(1) > button");
   await page.waitFor(100);
   await page.click(
     `#dropdown1 > div > form > input[type="submit"]:nth-child(6)`
   );
-  await page.waitFor(100);
-  await page.screenshot({ path: "logouted.png", fullPage: true });
   await browser.close();
 };
 
@@ -134,26 +161,28 @@ const calDOW = (month: number, day: number): number => {
   return date.getDay();
 };
 
-//FIXME:型
 const hasDesiredClass = async (): Promise<CollationResult> => {
   const desiredClassName: string = process.env.DESIRED_CLASS_NAME;
   const classes = await getClasses();
-  for (let c of classes) {
-    if (c.event === desiredClassName) {
+  for (let i = 0; i < classes.length; i++) {
+    if (classes[i].event === desiredClassName) {
       return {
         result: true,
-        detail: c,
+        index: i,
+        detail: classes[i],
       };
     }
   }
   return {
     result: false,
+    index: null,
     detail: null,
   };
 };
 // getClasses();
 const test = async () => {
   await main();
+  // await getClasses();
   // await writeFileAsync("./src/reserved.json", JSON.stringify({}));
 };
 

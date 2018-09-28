@@ -6,5 +6,13 @@
     "period": 5,
     "event": "ソフトバレーボール",
     "teacher": "岩月　基洋"
+  },
+  {
+    "month": 10,
+    "day": 9,
+    "dow": 2,
+    "period": 3,
+    "event": "アーチェリー",
+    "teacher": "山本　博"
   }
 ]

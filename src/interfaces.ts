@@ -15,5 +15,6 @@ export type DateInfo = {
 };
 export type CollationResult = {
   result: boolean;
+  index: number;
   detail: ClassInfo | null;
 };
