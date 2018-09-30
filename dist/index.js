@@ -9,62 +9,36 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = require("dotenv");
-const fs = require("fs");
-const util = require("util");
+const cron_1 = require("cron");
 const getClasses_1 = require("./getClasses");
-const loginAndReserve_1 = require("./loginAndReserve");
+const util_1 = require("./util");
 dotenv.load();
-const readFileAsync = util.promisify(fs.readFile);
-const writeFileAsync = util.promisify(fs.writeFile);
-const main = () => __awaiter(this, void 0, void 0, function* () {
-    const collationResult = yield hasDesiredClass();
-    console.log(collationResult);
+const reserve = (indexArray) => __awaiter(this, void 0, void 0, function* () {
+    for (const i of indexArray) {
+        // await loginAndReserve(i);
+    }
+});
+//main();
+const job = new cron_1.CronJob("*/5 * * * * *", () => __awaiter(this, void 0, void 0, function* () {
+    const collationResult = yield util_1.localCheck(yield getClasses_1.default());
     if (collationResult.result) {
-        const reservedClassesStr = yield readFileAsync("./src/reserved.json", {
+        job.stop();
+        yield reserve(collationResult.indexes);
+        const preReservedClasses = yield JSON.parse(yield util_1.readFileAsync("reserved.json", {
             encoding: "utf8",
-        });
-        const reservedClasses = JSON.parse(reservedClassesStr);
-        let isAlreadyReserved = false;
-        for (let rc of reservedClasses) {
-            isAlreadyReserved =
-                rc.month == collationResult.detail.month &&
-                    rc.day == collationResult.detail.day &&
-                    rc.event == collationResult.detail.event;
-            if (isAlreadyReserved) {
-                break;
-            }
-        }
-        if (!isAlreadyReserved) {
-            yield loginAndReserve_1.default(collationResult.index);
-            const newReservedClasses = reservedClasses;
-            yield newReservedClasses.push(collationResult.detail);
-            yield writeFileAsync("./src/reserved.json", JSON.stringify(newReservedClasses));
-        }
-        else {
-            console.log("already reserved");
-        }
+        }));
+        const newReservedClasses = [];
+        //await newReservedClasses.push(...preReservedClasses);
+        //await newReservedClasses.push(...collationResult.details);
+        yield util_1.writeFileAsync("reserved.json", yield JSON.stringify([
+            ...preReservedClasses,
+            ...collationResult.details,
+        ]));
+        yield console.log(`reserve ${collationResult.indexes.length} class(es)`);
+        yield job.start();
     }
     else {
-        console.log("not found");
+        console.log("no much class");
     }
-});
-const hasDesiredClass = () => __awaiter(this, void 0, void 0, function* () {
-    const desiredClassName = process.env.DESIRED_CLASS_NAME;
-    const classes = yield getClasses_1.default();
-    for (let i = 0; i < classes.length; i++) {
-        if (classes[i].event === desiredClassName) {
-            return {
-                result: true,
-                index: i,
-                detail: classes[i],
-            };
-        }
-    }
-    return {
-        result: false,
-        index: null,
-        detail: null,
-    };
-});
-main();
+}), null, true);
 //# sourceMappingURL=index.js.map

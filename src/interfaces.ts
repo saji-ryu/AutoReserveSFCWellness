@@ -1,5 +1,14 @@
 export type ClassInfoArray = Array<ClassInfo>;
+export type DesiredClassInfoArray = Array<DesiredClassInfo>;
 export type ClassInfo = {
+  month: number;
+  day: number;
+  dow: number;
+  period: number;
+  event: string;
+  teacher: string;
+};
+export type DesiredClassInfo = {
   month: number;
   day: number;
   dow: number;
@@ -15,6 +24,6 @@ export type DateInfo = {
 };
 export type CollationResult = {
   result: boolean;
-  index: number;
-  detail: ClassInfo | null;
+  indexes: Array<number>;
+  details: Array<ClassInfo> | null;
 };

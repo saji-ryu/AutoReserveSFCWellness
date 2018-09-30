@@ -1,4 +1,12 @@
-import { ClassInfo, DateInfo } from "./interfaces";
+import {
+  ClassInfo,
+  ClassInfoArray,
+  DateInfo,
+  DesiredClassInfoArray,
+  CollationResult,
+} from "./interfaces";
+import * as fs from "fs";
+import * as util from "util";
 
 export const parseClassInfoString = async (
   classInfoString: string
@@ -29,4 +37,67 @@ const calDOW = (month: number, day: number): number => {
   //FIXME:2018決め打ちはまずい
   const date = new Date(2018, month - 1, day);
   return date.getDay();
+};
+
+export const readFileAsync = util.promisify(fs.readFile);
+export const writeFileAsync = util.promisify(fs.writeFile);
+
+export const localCheck = async (
+  classes: ClassInfoArray
+): Promise<CollationResult> => {
+  const resultClassArray = [];
+  const resultIndexArray = [];
+  const desiredClass: DesiredClassInfoArray = await JSON.parse(
+    await readFileAsync("desired.json", {
+      encoding: "utf8",
+    })
+  );
+  const reservedClass: ClassInfoArray = await JSON.parse(
+    await readFileAsync("reserved.json", {
+      encoding: "utf8",
+    })
+  );
+  let isAlreadyRserve: boolean = false;
+  // console.log(`reserved:${JSON.stringify(reservedClass)}`);
+  for (let i = 0; i < classes.length; i++) {
+    for (let d of desiredClass) {
+      if (
+        classes[i].event === d.event &&
+        classes[i].dow === d.dow &&
+        classes[i].period === d.period
+      ) {
+        isAlreadyRserve = false;
+        for (let r of reservedClass) {
+          if (
+            classes[i].month === r.month &&
+            classes[i].day === r.day &&
+            classes[i].period === r.period
+          ) {
+            isAlreadyRserve = true;
+            console.log(
+              `already reserved : ${classes[i].event}(${classes[i].month}/${
+                classes[i].day
+              })`
+            );
+            break;
+          }
+        }
+        if (!isAlreadyRserve) {
+          console.log(
+            `reserving : ${classes[i].event}(${classes[i].month}/${
+              classes[i].day
+            })`
+          );
+          await resultClassArray.push(classes[i]);
+          await resultIndexArray.push(i);
+        }
+      }
+    }
+  }
+
+  return {
+    result: resultClassArray.length > 0 ? true : false,
+    indexes: resultClassArray.length > 0 ? resultIndexArray : null,
+    details: resultClassArray.length > 0 ? resultClassArray : null,
+  };
 };
