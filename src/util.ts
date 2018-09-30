@@ -58,7 +58,6 @@ export const localCheck = async (
     })
   );
   let isAlreadyRserve: boolean = false;
-  // console.log(`reserved:${JSON.stringify(reservedClass)}`);
   for (let i = 0; i < classes.length; i++) {
     for (let d of desiredClass) {
       if (

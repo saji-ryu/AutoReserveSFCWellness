@@ -28,9 +28,6 @@ const job = new cron_1.CronJob("*/5 * * * * *", () => __awaiter(this, void 0, vo
         const preReservedClasses = yield JSON.parse(yield util_1.readFileAsync("reserved.json", {
             encoding: "utf8",
         }));
-        const newReservedClasses = [];
-        //await newReservedClasses.push(...preReservedClasses);
-        //await newReservedClasses.push(...collationResult.details);
         yield util_1.writeFileAsync("reserved.json", yield JSON.stringify([
             ...preReservedClasses,
             ...collationResult.details,

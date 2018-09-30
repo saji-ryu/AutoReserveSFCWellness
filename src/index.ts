@@ -2,11 +2,7 @@ import * as dotenv from "dotenv";
 import { CronJob } from "cron";
 import getClasses from "./getClasses";
 import loginAndReserve from "./loginAndReserve";
-import {
-  ClassInfoArray,
-  CollationResult,
-  DesiredClassInfoArray,
-} from "./interfaces";
+import { CollationResult } from "./interfaces";
 import { writeFileAsync, localCheck, readFileAsync } from "./util";
 
 dotenv.load();
@@ -33,9 +29,6 @@ const job = new CronJob(
           encoding: "utf8",
         })
       );
-      const newReservedClasses = [];
-      //await newReservedClasses.push(...preReservedClasses);
-      //await newReservedClasses.push(...collationResult.details);
       await writeFileAsync(
         "reserved.json",
         await JSON.stringify([
