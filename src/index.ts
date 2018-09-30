@@ -13,7 +13,7 @@ dotenv.load();
 
 const reserve = async (indexArray: Array<number>): Promise<void> => {
   for (const i of indexArray) {
-    // await loginAndReserve(i);
+    await loginAndReserve(i);
   }
 };
 

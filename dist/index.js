@@ -11,11 +11,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = require("dotenv");
 const cron_1 = require("cron");
 const getClasses_1 = require("./getClasses");
+const loginAndReserve_1 = require("./loginAndReserve");
 const util_1 = require("./util");
 dotenv.load();
 const reserve = (indexArray) => __awaiter(this, void 0, void 0, function* () {
     for (const i of indexArray) {
-        // await loginAndReserve(i);
+        yield loginAndReserve_1.default(i);
     }
 });
 //main();
