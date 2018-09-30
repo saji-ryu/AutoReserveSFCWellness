@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "tsc & node dist/index.js",
     "strt:dev": "nodemon dist/app.js -watch src",
     "build": "tsc",
     "watch": "tsc -w"
